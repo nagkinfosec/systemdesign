@@ -11,7 +11,6 @@ This project is a client-side HTML learning guide focused on system design topic
 - `index.html` - Main landing page for the system design guide.
 - `interactive.html` - Interactive learning page.
 - `resources.html` - Resources and tools page.
-- `pages/` - Dedicated pages for system design phases and additional content:
   - `AppSecurity.html`
   - `phase1.html`
   - `phase2.html`
