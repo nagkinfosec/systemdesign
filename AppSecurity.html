@@ -1,0 +1,984 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Security Architecture | RK's System Design</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8fbff;
+            --surface: #ffffff;
+            --surface-soft: #f1f6ff;
+            --line: #dadce0;
+            --line-soft: #e8eaed;
+            --text: #202124;
+            --muted: #5f6368;
+            --blue: #1a73e8;
+            --blue-soft: #e8f0fe;
+            --green: #34a853;
+            --green-soft: #e6f4ea;
+            --yellow: #fbbc05;
+            --yellow-soft: #fef7e0;
+            --red: #ea4335;
+            --red-soft: #fce8e6;
+            --cyan: #00acc1;
+            --cyan-soft: #e0f7fa;
+            --purple: #a142f4;
+            --purple-soft: #f3e8fd;
+            --shadow: 0 1px 2px rgba(60, 64, 67, 0.12), 0 18px 42px rgba(60, 64, 67, 0.10);
+            --font: 'Outfit', sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at 15% 0%, rgba(66, 133, 244, 0.14), transparent 28%),
+                radial-gradient(circle at 85% 12%, rgba(52, 168, 83, 0.10), transparent 28%),
+                linear-gradient(180deg, #f8fbff 0%, #f7f9fc 56%, #ffffff 100%);
+            color: var(--text);
+            font-family: var(--font);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        body::before {
+            background-image:
+                linear-gradient(rgba(26, 115, 232, 0.055) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(26, 115, 232, 0.055) 1px, transparent 1px);
+            background-size: 32px 32px;
+            content: '';
+            inset: 0;
+            opacity: 0.6;
+            pointer-events: none;
+            position: fixed;
+            z-index: -1;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .shell {
+            margin: 0 auto;
+            max-width: 1180px;
+            padding: 24px 22px 80px;
+        }
+
+        .topbar {
+            align-items: center;
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 46px;
+        }
+
+        .back-link {
+            align-items: center;
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--muted);
+            display: inline-flex;
+            font-size: 14px;
+            font-weight: 800;
+            gap: 8px;
+            padding: 10px 16px;
+            text-decoration: none;
+            transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+        }
+
+        .back-link:hover {
+            background: #fff;
+            border-color: #aecbfa;
+            color: var(--blue);
+        }
+
+        .brand-pill {
+            background: #fff;
+            border: 1px solid var(--line-soft);
+            border-radius: 999px;
+            color: #3c4043;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            padding: 10px 14px;
+            text-transform: uppercase;
+        }
+
+        .hero {
+            display: grid;
+            gap: 26px;
+            grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
+            margin-bottom: 42px;
+        }
+
+        .hero-copy {
+            align-self: center;
+        }
+
+        .eyebrow {
+            color: var(--blue);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            color: var(--text);
+            font-size: clamp(42px, 6vw, 70px);
+            font-weight: 800;
+            letter-spacing: -0.045em;
+            line-height: 0.98;
+            margin-bottom: 20px;
+        }
+
+        .hero-copy p {
+            color: var(--muted);
+            font-size: 18px;
+            max-width: 680px;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 26px;
+        }
+
+        .button {
+            align-items: center;
+            border-radius: 999px;
+            display: inline-flex;
+            font-size: 14px;
+            font-weight: 800;
+            justify-content: center;
+            min-height: 44px;
+            padding: 12px 18px;
+            text-decoration: none;
+        }
+
+        .button.primary {
+            background: var(--blue);
+            color: #fff;
+        }
+
+        .button.secondary {
+            background: #fff;
+            border: 1px solid var(--line);
+            color: var(--blue);
+        }
+
+        .hero-panel {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .status-strip {
+            background:
+                linear-gradient(90deg, rgba(66, 133, 244, 0.12), rgba(52, 168, 83, 0.12), rgba(251, 188, 5, 0.12), rgba(234, 67, 53, 0.12));
+            border-bottom: 1px solid var(--line-soft);
+            padding: 22px;
+        }
+
+        .status-strip span {
+            color: var(--muted);
+            display: block;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .status-strip strong {
+            color: var(--text);
+            display: block;
+            font-size: 24px;
+            letter-spacing: -0.02em;
+            line-height: 1.12;
+        }
+
+        .metric-grid {
+            display: grid;
+            gap: 1px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            background: var(--line-soft);
+        }
+
+        .metric {
+            background: #fff;
+            padding: 20px;
+        }
+
+        .metric b {
+            color: var(--text);
+            display: block;
+            font-size: 26px;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .metric span {
+            color: var(--muted);
+            display: block;
+            font-size: 13px;
+            line-height: 1.35;
+        }
+
+        .nav {
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid var(--line-soft);
+            border-radius: 20px;
+            box-shadow: 0 1px 2px rgba(60, 64, 67, 0.08);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 28px;
+            padding: 10px;
+            position: sticky;
+            top: 16px;
+            z-index: 5;
+            backdrop-filter: blur(18px);
+        }
+
+        .nav a {
+            border-radius: 999px;
+            color: #3c4043;
+            font-size: 13px;
+            font-weight: 800;
+            padding: 9px 12px;
+            text-decoration: none;
+        }
+
+        .nav a:hover {
+            background: var(--blue-soft);
+            color: var(--blue);
+        }
+
+        .section {
+            margin-top: 34px;
+        }
+
+        .section-head {
+            align-items: end;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 16px;
+        }
+
+        .section-head h2 {
+            color: var(--text);
+            font-size: clamp(28px, 3vw, 40px);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.08;
+        }
+
+        .section-head p {
+            color: var(--muted);
+            max-width: 500px;
+        }
+
+        .lifecycle {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            padding: 24px;
+        }
+
+        .flow-grid {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+        }
+
+        .stage {
+            border: 1px solid var(--line-soft);
+            border-radius: 18px;
+            min-height: 186px;
+            padding: 18px;
+            position: relative;
+        }
+
+        .stage::before {
+            border-radius: 999px;
+            content: '';
+            height: 5px;
+            left: 18px;
+            position: absolute;
+            right: 18px;
+            top: 0;
+            transform: translateY(-1px);
+        }
+
+        .blue::before {
+            background: #4285f4;
+        }
+
+        .purple::before {
+            background: var(--purple);
+        }
+
+        .green::before {
+            background: var(--green);
+        }
+
+        .yellow::before {
+            background: var(--yellow);
+        }
+
+        .cyan::before {
+            background: var(--cyan);
+        }
+
+        .red::before {
+            background: var(--red);
+        }
+
+        .stage small {
+            color: var(--muted);
+            display: block;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            text-transform: uppercase;
+        }
+
+        .stage h3 {
+            color: var(--text);
+            font-size: 17px;
+            line-height: 1.2;
+            margin-bottom: 10px;
+        }
+
+        .stage p {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .stage a {
+            color: var(--blue);
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 800;
+            margin-top: 14px;
+            text-decoration: none;
+        }
+
+        .gates {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            margin-top: 18px;
+        }
+
+        .gate {
+            background: #f8fafd;
+            border: 1px solid var(--line-soft);
+            border-radius: 20px;
+            padding: 18px;
+        }
+
+        .gate strong {
+            color: var(--text);
+            display: block;
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+
+        .gate span {
+            color: var(--muted);
+            display: block;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .cards {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            box-shadow: 0 1px 2px rgba(60, 64, 67, 0.08);
+            padding: 22px;
+        }
+
+        .card h3 {
+            color: var(--text);
+            font-size: 20px;
+            letter-spacing: -0.015em;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.55;
+            margin-bottom: 16px;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: #3c4043;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 8px 10px;
+            text-decoration: none;
+        }
+
+        .chip.blue {
+            background: var(--blue-soft);
+            border-color: #c6dafc;
+            color: #185abc;
+        }
+
+        .chip.green {
+            background: var(--green-soft);
+            border-color: #c8e6c9;
+            color: #137333;
+        }
+
+        .chip.yellow {
+            background: var(--yellow-soft);
+            border-color: #fde293;
+            color: #8a5b00;
+        }
+
+        .chip.red {
+            background: var(--red-soft);
+            border-color: #f4c7c3;
+            color: #b3261e;
+        }
+
+        .wide-grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .responsibility {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .owner-row {
+            display: grid;
+            gap: 0;
+            grid-template-columns: 250px 1fr;
+        }
+
+        .owner-row + .owner-row {
+            border-top: 1px solid var(--line-soft);
+        }
+
+        .owner-title {
+            background: #f8fafd;
+            color: var(--text);
+            font-weight: 800;
+            padding: 18px;
+        }
+
+        .owner-detail {
+            color: var(--muted);
+            padding: 18px;
+        }
+
+        .zero-trust {
+            background: #0f172a;
+            border-radius: 28px;
+            color: #e2e8f0;
+            overflow: hidden;
+        }
+
+        .zero-top {
+            background:
+                linear-gradient(135deg, rgba(26, 115, 232, 0.36), rgba(52, 168, 83, 0.18)),
+                #111827;
+            padding: 28px;
+        }
+
+        .zero-top h2 {
+            color: #fff;
+            font-size: clamp(28px, 3vw, 40px);
+            letter-spacing: -0.03em;
+            margin-bottom: 10px;
+        }
+
+        .zero-top p {
+            color: #cbd5e1;
+            max-width: 780px;
+        }
+
+        .pillars {
+            display: grid;
+            gap: 1px;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            background: rgba(148, 163, 184, 0.25);
+        }
+
+        .pillar {
+            background: rgba(15, 23, 42, 0.96);
+            padding: 18px;
+        }
+
+        .pillar strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .pillar span {
+            color: #94a3b8;
+            display: block;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .footer-note {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 28px;
+            text-align: center;
+        }
+
+        @media(max-width: 1040px) {
+            .hero,
+            .wide-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .flow-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .cards {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .pillars {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media(max-width: 760px) {
+            .shell {
+                padding: 18px 14px 60px;
+            }
+
+            .topbar,
+            .section-head {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .nav {
+                position: static;
+            }
+
+            .flow-grid,
+            .gates,
+            .cards,
+            .pillars {
+                grid-template-columns: 1fr;
+            }
+
+            .owner-row {
+                grid-template-columns: 1fr;
+            }
+
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="shell">
+        <div class="topbar">
+            <a class="back-link" href="../index.html">&lt;- Back to Overview</a>
+            <div class="brand-pill">RK's Architect Guide</div>
+        </div>
+
+        <section class="hero">
+            <div class="hero-copy">
+                <div class="eyebrow">Application Security Architecture</div>
+                <h1>Secure-by-design DevSecOps operating model.</h1>
+                <p>Security starts before code exists, becomes automated in the developer workflow, and continues through
+                    cloud runtime, endpoint posture, incident response, and remediation feedback loops.</p>
+                <div class="hero-actions">
+                    <a class="button primary" href="#lifecycle">View lifecycle</a>
+                    <a class="button secondary" href="#controls">Explore controls</a>
+                </div>
+            </div>
+
+            <aside class="hero-panel">
+                <div class="status-strip">
+                    <span>Architecture goal</span>
+                    <strong>Make every release measurable, gated, monitored, and recoverable.</strong>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric">
+                        <b>6</b>
+                        <span>Lifecycle zones from design to runtime operations.</span>
+                    </div>
+                    <div class="metric">
+                        <b>3</b>
+                        <span>Primary gates: review, scan, and runtime response.</span>
+                    </div>
+                    <div class="metric">
+                        <b>12</b>
+                        <span>Core security domains mapped to tools and teams.</span>
+                    </div>
+                    <div class="metric">
+                        <b>1</b>
+                        <span>Continuous feedback loop owned by product security.</span>
+                    </div>
+                </div>
+            </aside>
+        </section>
+
+        <nav class="nav" aria-label="Page sections">
+            <a href="#lifecycle">Lifecycle</a>
+            <a href="#gates">Decision Gates</a>
+            <a href="#controls">Controls</a>
+            <a href="#teams">Teams</a>
+            <a href="#zero-trust">Zero Trust</a>
+            <a href="#tooling">Tooling</a>
+        </nav>
+
+        <section class="section" id="lifecycle">
+            <div class="section-head">
+                <h2>End-to-end application security lifecycle</h2>
+                <p>The view follows the AppSecurity content as one continuous operating model, not a disconnected list of
+                    tools.</p>
+            </div>
+
+            <div class="lifecycle">
+                <div class="flow-grid">
+                    <article class="stage blue">
+                        <small>01 Design</small>
+                        <h3>Security by Design</h3>
+                        <p>Define security requirements, sensitive data flows, compliance needs, and secure architecture
+                            decisions before implementation begins.</p>
+                        <a href="https://www.youtube.com/results?search_query=secure+architecture+design" target="_blank"
+                            rel="noopener noreferrer">Learn secure architecture</a>
+                    </article>
+                    <article class="stage purple">
+                        <small>02 Risk</small>
+                        <h3>Threat Modeling</h3>
+                        <p>Use STRIDE, DFDs, attacker paths, and control mapping to translate product risk into actionable
+                            engineering requirements.</p>
+                        <a href="https://www.youtube.com/results?search_query=threat+modeling+for+developers" target="_blank"
+                            rel="noopener noreferrer">Learn threat modeling</a>
+                    </article>
+                    <article class="stage green">
+                        <small>03 Code</small>
+                        <h3>Developer Responsibility</h3>
+                        <p>Developers own secure implementation, IDE scanning, code review, secret hygiene, dependency
+                            awareness, and remediation.</p>
+                        <a href="https://www.youtube.com/results?search_query=secure+code+review" target="_blank"
+                            rel="noopener noreferrer">Learn secure code review</a>
+                    </article>
+                    <article class="stage yellow">
+                        <small>04 Source</small>
+                        <h3>Git and SCM Controls</h3>
+                        <p>GitHub Advanced Security, branch protection, secret scanning, and Snyk integration reduce
+                            source-control risk before merge.</p>
+                        <a href="https://www.youtube.com/results?search_query=GitHub+Advanced+Security" target="_blank"
+                            rel="noopener noreferrer">Learn GitHub security</a>
+                    </article>
+                    <article class="stage cyan">
+                        <small>05 Pipeline</small>
+                        <h3>CI/CD Security Gates</h3>
+                        <p>SAST, SCA, DAST, IaC, container scans, Tenable, and release policies stop risky builds before
+                            production.</p>
+                        <a href="https://www.youtube.com/results?search_query=SAST+DAST+SCA+CI+CD+pipeline" target="_blank"
+                            rel="noopener noreferrer">Learn pipeline security</a>
+                    </article>
+                    <article class="stage red">
+                        <small>06 Runtime</small>
+                        <h3>Cloud, Endpoint and IR</h3>
+                        <p>Azure guardrails, endpoint posture, SIEM, EDR, incident response, and vulnerability remediation
+                            keep production resilient.</p>
+                        <a href="https://www.youtube.com/results?search_query=incident+response+workflow" target="_blank"
+                            rel="noopener noreferrer">Learn incident response</a>
+                    </article>
+                </div>
+
+                <div class="gates" id="gates">
+                    <div class="gate">
+                        <strong>Gate 1: Design accepted?</strong>
+                        <span>If threat modeling exposes unhandled risk, return to security requirements and architecture
+                            controls before coding.</span>
+                    </div>
+                    <div class="gate">
+                        <strong>Gate 2: Scans pass?</strong>
+                        <span>If SAST, SCA, DAST, container, IaC, or secret scans fail, fix vulnerabilities and resubmit
+                            the build.</span>
+                    </div>
+                    <div class="gate">
+                        <strong>Gate 3: Threat detected?</strong>
+                        <span>If telemetry flags a runtime issue, trigger incident response, contain the risk, and feed
+                            lessons back into engineering.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="controls">
+            <div class="section-head">
+                <h2>Control map</h2>
+                <p>Each card groups the original AppSecurity topics into clear, scannable control domains.</p>
+            </div>
+
+            <div class="cards">
+                <article class="card">
+                    <h3>Security by Design</h3>
+                    <p>Build security into the blueprint: product requirements, secure architecture patterns, data flow
+                        mapping, privacy, compliance, and misuse scenarios.</p>
+                    <div class="chips">
+                        <a class="chip blue" href="https://www.youtube.com/results?search_query=security+requirements+engineering"
+                            target="_blank" rel="noopener noreferrer">Requirements</a>
+                        <a class="chip" href="https://www.youtube.com/results?search_query=data+flow+diagram+security"
+                            target="_blank" rel="noopener noreferrer">Data flows</a>
+                    </div>
+                </article>
+
+                <article class="card">
+                    <h3>Threat Modeling</h3>
+                    <p>Identify assets, draw trust boundaries, apply STRIDE, rate threats, map mitigations, and convert
+                        findings into sprint-ready work.</p>
+                    <div class="chips">
+                        <span class="chip">STRIDE</span>
+                        <span class="chip">DFDs</span>
+                        <span class="chip">Control mapping</span>
+                    </div>
+                </article>
+
+                <article class="card">
+                    <h3>Secure Development</h3>
+                    <p>Use Snyk IDE, SonarLint, secure coding patterns, input validation, output encoding, parameterized
+                        queries, and peer review.</p>
+                    <div class="chips">
+                        <a class="chip green" href="https://www.youtube.com/results?search_query=Snyk+IDE+VSCode"
+                            target="_blank" rel="noopener noreferrer">Snyk IDE</a>
+                        <a class="chip" href="https://www.youtube.com/results?search_query=SonarLint+VSCode"
+                            target="_blank" rel="noopener noreferrer">SonarLint</a>
+                    </div>
+                </article>
+
+                <article class="card">
+                    <h3>SCM Security</h3>
+                    <p>Protect source control using branch rules, pull request policies, secret scanning, code scanning,
+                        Dependabot alerts, and GitHub Advanced Security.</p>
+                    <div class="chips">
+                        <span class="chip yellow">Branch protection</span>
+                        <span class="chip">Secret scanning</span>
+                        <span class="chip">Dependabot</span>
+                    </div>
+                </article>
+
+                <article class="card">
+                    <h3>Pipeline Security</h3>
+                    <p>Automate quality and security gates across build, dependency, runtime, IaC, and container layers
+                        before release approval.</p>
+                    <div class="chips">
+                        <span class="chip">SAST</span>
+                        <span class="chip">SCA</span>
+                        <span class="chip">DAST</span>
+                        <span class="chip">IaC scan</span>
+                    </div>
+                </article>
+
+                <article class="card">
+                    <h3>Cloud Guardrails</h3>
+                    <p>Secure Azure with policy, Defender for Cloud, RBAC, PIM, Key Vault, network controls, Sentinel,
+                        and least-privilege deployment patterns.</p>
+                    <div class="chips">
+                        <a class="chip blue" href="https://www.youtube.com/results?search_query=Azure+Policy+tutorial"
+                            target="_blank" rel="noopener noreferrer">Azure Policy</a>
+                        <a class="chip" href="https://www.youtube.com/results?search_query=Azure+Defender+for+Cloud"
+                            target="_blank" rel="noopener noreferrer">Defender</a>
+                    </div>
+                </article>
+
+                <article class="card">
+                    <h3>Endpoint and Server Security</h3>
+                    <p>Harden hosts, close unnecessary ports, automate patching with Tanium, monitor EDR health, and
+                        enforce workload isolation.</p>
+                    <div class="chips">
+                        <a class="chip" href="https://www.youtube.com/results?search_query=Tanium+patching"
+                            target="_blank" rel="noopener noreferrer">Tanium</a>
+                        <span class="chip">EDR</span>
+                        <span class="chip">OS hardening</span>
+                    </div>
+                </article>
+
+                <article class="card">
+                    <h3>Incident Response</h3>
+                    <p>Detect, triage, contain, eradicate, recover, and convert post-incident learning into better product
+                        security controls.</p>
+                    <div class="chips">
+                        <span class="chip red">Triage</span>
+                        <span class="chip">Containment</span>
+                        <span class="chip">Lessons learned</span>
+                    </div>
+                </article>
+
+                <article class="card">
+                    <h3>Remediation Loop</h3>
+                    <p>Runtime telemetry, vulnerability scanning, incidents, and scan results feed back into secure code,
+                        cloud policy, and release standards.</p>
+                    <div class="chips">
+                        <a class="chip red" href="https://www.youtube.com/results?search_query=Tenable+vulnerability+management+scan"
+                            target="_blank" rel="noopener noreferrer">Tenable</a>
+                        <a class="chip" href="https://www.youtube.com/results?search_query=Snyk+vulnerability+scan"
+                            target="_blank" rel="noopener noreferrer">Snyk</a>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="section wide-grid" id="teams">
+            <div>
+                <div class="section-head">
+                    <h2>Team ownership</h2>
+                </div>
+                <div class="responsibility">
+                    <div class="owner-row">
+                        <div class="owner-title">Product Security Architect</div>
+                        <div class="owner-detail">Owns end-to-end security architecture, risk posture, control strategy,
+                            and cross-team decision making.</div>
+                    </div>
+                    <div class="owner-row">
+                        <div class="owner-title">Security Architecture / Risk</div>
+                        <div class="owner-detail">Runs threat modeling, control mapping, risk acceptance, and secure
+                            requirements alignment.</div>
+                    </div>
+                    <div class="owner-row">
+                        <div class="owner-title">Development / AppSec</div>
+                        <div class="owner-detail">Owns secure code, IDE scanning, review quality, vulnerability fixes,
+                            and sprint-level remediation.</div>
+                    </div>
+                    <div class="owner-row">
+                        <div class="owner-title">DevOps / SCM / CI-CD</div>
+                        <div class="owner-detail">Owns branch protection, pipeline gates, build scanning, release
+                            controls, and tool integrations.</div>
+                    </div>
+                    <div class="owner-row">
+                        <div class="owner-title">Cloud / Endpoint / SecOps</div>
+                        <div class="owner-detail">Owns Azure guardrails, endpoint posture, monitoring, incident response,
+                            and runtime protection.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tooling">
+                <div class="section-head">
+                    <h2>Tooling stack</h2>
+                </div>
+                <div class="cards" style="grid-template-columns: 1fr;">
+                    <article class="card">
+                        <h3>Developer and source tools</h3>
+                        <p>Snyk IDE, SonarLint, GitHub Advanced Security, secret scanning, Dependabot, branch protection,
+                            and secure code review.</p>
+                        <div class="chips">
+                            <span class="chip green">Snyk</span>
+                            <span class="chip">SonarLint</span>
+                            <span class="chip yellow">GitHub Advanced Security</span>
+                        </div>
+                    </article>
+                    <article class="card">
+                        <h3>Pipeline and runtime tools</h3>
+                        <p>SAST, SCA, DAST, Tenable, Akamai DAST, Azure Policy, Defender for Cloud, Sentinel, EDR, and
+                            Tanium patching.</p>
+                        <div class="chips">
+                            <span class="chip blue">Azure</span>
+                            <span class="chip">Tenable</span>
+                            <span class="chip red">Akamai DAST</span>
+                            <span class="chip">Tanium</span>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section zero-trust" id="zero-trust">
+            <div class="zero-top">
+                <h2>Zero Trust extension</h2>
+                <p>Never trust, always verify. The same application security lifecycle extends into identity, device,
+                    network, data, apps, and infrastructure controls with continuous risk assessment.</p>
+            </div>
+            <div class="pillars">
+                <div class="pillar">
+                    <strong>Identity</strong>
+                    <span>MFA, conditional access, RBAC, PIM, and identity risk scoring.</span>
+                </div>
+                <div class="pillar">
+                    <strong>Device</strong>
+                    <span>Device posture, compliance, EDR, patch state, and encryption health.</span>
+                </div>
+                <div class="pillar">
+                    <strong>Network</strong>
+                    <span>Micro-segmentation, private access, firewall policy, and traffic inspection.</span>
+                </div>
+                <div class="pillar">
+                    <strong>Data</strong>
+                    <span>Classification, encryption, DLP, backup, and access governance.</span>
+                </div>
+                <div class="pillar">
+                    <strong>Apps</strong>
+                    <span>SSO, app governance, API protection, session controls, and least privilege.</span>
+                </div>
+                <div class="pillar">
+                    <strong>Infrastructure</strong>
+                    <span>Policy-as-code, secure baselines, workload identity, and runtime monitoring.</span>
+                </div>
+            </div>
+        </section>
+
+        <p class="footer-note">RK's Application Security Architecture: design, build, gate, operate, respond, and improve.</p>
+    </main>
+</body>
+
+</html>
+

@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Learning - RK's System Design Guide</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    /* BUTTER & CURD THEME */
+    :root {
+      --bg: #FDFBF7;
+      --surface: #FFFFFF;
+      --text: #292524;
+      --text-muted: #78716C;
+      --butter-light: #FEF3C7;
+
+      --phase1: #6366f1;
+      --phase1-bg: #EEF2FF;
+      --phase2: #2DD4BF;
+      --phase2-bg: #F0FDFA;
+      --phase3: #F59E0B;
+      --phase3-bg: #FFFBEB;
+      --phase4: #8B5CF6;
+      --phase4-bg: #F5F3FF;
+      --phase5: #38BDF8;
+      --phase5-bg: #F0F9FF;
+      --phase6: #10B981;
+      --phase6-bg: #ECFDF5;
+      --phase7: #EF4444;
+      --phase7-bg: #FEF2F2;
+
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.03);
+      --shadow-md: 0 12px 30px -10px rgba(251, 191, 36, 0.15), 0 4px 10px rgba(0, 0, 0, 0.04);
+      --shadow-lg: 0 30px 60px -15px rgba(251, 191, 36, 0.2), 0 10px 20px rgba(0, 0, 0, 0.02);
+
+      --font: 'Outfit', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+      background: var(--surface);
+      min-height: 100vh;
+    }
+
+    .hero {
+      padding: 80px 0;
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: clamp(48px, 6vw, 64px);
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--phase1-bg);
+      color: var(--phase1);
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: 500;
+      font-size: 14px;
+      margin-bottom: 32px;
+      transition: all 0.2s ease;
+    }
+
+    .back-link:hover {
+      background: var(--phase1);
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    .section {
+      margin-bottom: 80px;
+    }
+
+    .section h2 {
+      font-size: clamp(32px, 4vw, 42px);
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    /* Code Playground Styles */
+    .code-example-btn {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 2px solid var(--phase1);
+      background: white;
+      color: var(--phase1);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .code-example-btn.active {
+      background: var(--phase1);
+      color: white;
+    }
+
+    .code-playground {
+      background: var(--butter-light);
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 24px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .code-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .run-button {
+      padding: 8px 16px;
+      background: var(--phase1);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .run-button:hover {
+      background: var(--phase1);
+      transform: translateY(-1px);
+    }
+
+    .code-content {
+      background: var(--text);
+      color: var(--butter-light);
+      padding: 20px;
+      border-radius: 12px;
+      font-family: var(--mono);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 200px;
+      white-space: pre-wrap;
+    }
+
+    /* Quiz Styles */
+    .quiz-container {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .quiz-question {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 24px;
+    }
+
+    .quiz-options {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .quiz-option {
+      padding: 16px 20px;
+      background: var(--butter-light);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 500;
+    }
+
+    .quiz-option:hover {
+      background: var(--phase1-bg);
+      border-color: var(--phase1);
+      transform: translateY(-1px);
+    }
+
+    .quiz-option.correct {
+      background: var(--phase6-bg);
+      color: var(--phase6);
+      border-color: var(--phase6);
+    }
+
+    .quiz-option.incorrect {
+      background: var(--phase7-bg);
+      color: var(--phase7);
+      border-color: var(--phase7);
+    }
+
+    .quiz-buttons {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .prev-btn, .next-btn {
+      padding: 12px 24px;
+      background: var(--phase1);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .prev-btn:hover, .next-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    /* Case Studies Styles */
+    .case-study-card {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-md);
+      transition: transform 0.3s;
+    }
+
+    .case-study-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .case-study-header {
+      margin-bottom: 24px;
+    }
+
+    .case-study-company {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .case-study-challenge {
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+
+    .case-study-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .case-metric {
+      background: var(--butter-light);
+      padding: 16px;
+      border-radius: 12px;
+    }
+
+    .metric-label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .view-details-btn {
+      margin-top: 24px;
+      padding: 12px 24px;
+      background: var(--phase1);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.2s ease;
+    }
+
+    .view-details-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .case-details {
+      margin-top: 24px;
+      padding: 24px;
+      background: var(--butter-light);
+      border-radius: 12px;
+      display: none;
+    }
+
+    .case-details h4 {
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .case-details ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .case-details li {
+      padding: 8px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .case-details li:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <a href="index.html" class="back-link">← Back to Main Guide</a>
+      <h1>🚀 Interactive Learning</h1>
+      <p class="subtitle">Hands-on practice with quizzes and real-world case studies</p>
+    </div>
+    
+    <!-- Quiz Section -->
+    <div class="section">
+      <h2>🧠 Test Your Knowledge</h2>
+      
+      <div class="quiz-progress">
+        <span>Question <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span></span>
+        <div class="progress-dots">
+          <div class="progress-dot active"></div>
+          <div class="progress-dot"></div>
+          <div class="progress-dot"></div>
+          <div class="progress-dot"></div>
+          <div class="progress-dot"></div>
+        </div>
+      </div>
+
+      <div class="quiz-container" id="quizContainer">
+        <div class="quiz-question" id="quizQuestion">🤔 Which caching strategy is best for read-heavy workloads with infrequent updates?</div>
+        <div class="quiz-options" id="quizOptions">
+          <div class="quiz-option" onclick="checkQuizAnswer(this, false)">Write-Through Cache</div>
+          <div class="quiz-option" onclick="checkQuizAnswer(this, true)">Cache-Aside Pattern</div>
+          <div class="quiz-option" onclick="checkQuizAnswer(this, false)">Write-Behind Cache</div>
+          <div class="quiz-option" onclick="checkQuizAnswer(this, false)">Refresh-Ahead Cache</div>
+        </div>
+        <div class="quiz-buttons">
+          <button class="prev-btn" id="prevBtn" onclick="previousQuestion()" style="visibility: hidden;">← Previous</button>
+          <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next →</button>
+        </div>
+      </div>
+
+      <div id="quizResults" style="display: none; text-align: center; padding: 40px;">
+        <h3 style="font-size: 28px; margin-bottom: 20px;">🎉 Quiz Complete!</h3>
+        <p style="font-size: 20px; margin-bottom: 30px;">Your Score: <span id="quizScore" style="font-weight: 700; color: #667eea;">0/5</span></p>
+        <button onclick="restartQuiz()" style="padding: 15px 30px; background: #667eea; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 16px;">Restart Quiz</button>
+      </div>
+    </div>
+
+    <!-- Case Studies Section -->
+    <div class="section">
+      <h2>🏢 Real-World Architecture Case Studies</h2>
+
+      <!-- Netflix -->
+      <div class="case-study-card">
+        <div class="case-study-header">
+          <div class="case-study-company">🍿 Netflix</div>
+          <div class="case-study-challenge">Streaming 230M+ users globally with <100ms startup latency</div>
+        </div>
+        <div class="case-study-metrics">
+          <div class="case-metric">
+            <span class="metric-label">📊 Daily Streaming Hours</span>
+            <span class="metric-value">185M+ hours</span>
+          </div>
+          <div class="case-metric">
+            <span class="metric-label">🌍 Global Coverage</span>
+            <span class="metric-value">190+ countries</span>
+          </div>
+          <div class="case-metric">
+            <span class="metric-label">⚡ Cache Hit Ratio</span>
+            <span class="metric-value">95%+ at edge</span>
+          </div>
+          <div class="case-metric">
+            <span class="metric-label">🔧 Key Technologies</span>
+            <span class="metric-value">Open Connect CDN, Zuul, Cassandra</span>
+          </div>
+        </div>
+        <button class="view-details-btn" onclick="toggleCaseStudy('netflix')">View Architecture Details →</button>
+        <div class="case-details" id="netflix-details">
+          <h4>Key Design Decisions:</h4>
+          <ul>
+            <li><strong>Edge Computing:</strong> 80% of traffic served from Open Connect appliances</li>
+            <li><strong>Chaos Engineering:</strong> Simian Army for failure testing</li>
+            <li><strong>Microservices:</strong> 500+ services with independent scaling</li>
+            <li><strong>Multi-Region:</strong> Active-active across AWS regions</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Uber -->
+      <div class="case-study-card">
+        <div class="case-study-header">
+          <div class="case-study-company">🚗 Uber</div>
+          <div class="case-study-challenge">Real-time ride matching across 10K+ cities with <50ms response</div>
+        </div>
+        <div class="case-study-metrics">
+          <div class="case-metric">
+            <span class="metric-label">🚕 Daily Trips</span>
+            <span class="metric-value">22M+ completed</span>
+          </div>
+          <div class="case-metric">
+            <span class="metric-label">⚡ Matching Latency</span>
+            <span class="metric-value"><50ms for 95% of requests</span>
+          </div>
+          <div class="case-metric">
+            <span class="metric-label">📍 Geospatial Index</span>
+            <span class="metric-value">S2 cells with 1cm precision</span>
+          </div>
+          <div class="case-metric">
+            <span class="metric-label">🔧 Key Technologies</span>
+            <span class="metric-value">S2, RingPop, Kafka, Go</span>
+          </div>
+        </div>
+        <button class="view-details-btn" onclick="toggleCaseStudy('uber')">View Architecture Details →</button>
+        <div class="case-details" id="uber-details">
+          <h4>Key Design Decisions:</h4>
+          <ul>
+            <li><strong>S2 Geometry:</strong> Google's S2 library for efficient geospatial indexing</li>
+            <li><strong>RingPop:</strong> Consistent hashing for service discovery and load balancing</li>
+            <li><strong>Event Streaming:</strong> Kafka for real-time event processing</li>
+            <li><strong>Dynamic Pricing:</strong> Machine learning-based surge pricing algorithm</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Twitter -->
+      <div class="case-study-card">
+        <div class="case-study-header">
+          <div class="case-study-company">🐦 Twitter/X</div>
+          <div class="case-study-challenge">500M+ tweets per day with real-time timeline generation</div>
+        </div>
+        <div class="case-study-metrics">
+          <div class="case-metric">
+            <span class="metric-label">📝 Tweets/Day</span>
+            <span class="metric-value">500M+ tweets</span>
+          </div>
+          <div class="case-metric">
+            <span class="metric-label">⚡ Timeline Latency</span>
+            <span class="metric-value"><200ms for home timeline</span>
+          </div>
+          <div class="case-metric">
+            <span class="metric-label">💾 Cache Hit Ratio</span>
+            <span class="metric-value">98% for timeline reads</span>
+          </div>
+          <div class="case-metric">
+            <span class="metric-label">🔧 Key Technologies</span>
+            <span class="metric-value">Timeline Service, Redis, Manhattan</span>
+          </div>
+        </div>
+        <button class="view-details-btn" onclick="toggleCaseStudy('twitter')">View Architecture Details →</button>
+        <div class="case-details" id="twitter-details">
+          <h4>Key Design Decisions:</h4>
+          <ul>
+            <li><strong>Fan-out on Write:</strong> Pre-compute timelines for better read performance</li>
+            <li><strong>Timeline Cache:</strong> Redis clusters for hot timeline data</li>
+            <li><strong>Sharding:</strong> User-based sharding for horizontal scaling</li>
+            <li><strong>Eventual Consistency:</strong> Acceptable for social media timelines</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Architecture Flow Explanations -->
+    <div class="section">
+      <h2>🔄 Architecture Flow Explanations</h2>
+      
+      <!-- Netflix Flow -->
+      <div style="background: #f8f9fa; padding: 30px; border-radius: 12px; margin-bottom: 30px;">
+        <h3 style="color: #667eea; margin-bottom: 20px;">🍿 Netflix Architecture Flow (10 Steps)</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 1: User Request Initiation</strong>
+            <p>User opens Netflix app → Device sends HTTP request with user authentication token and device profile</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 2: DNS Resolution & CDN Routing</strong>
+            <p>DNS resolves to nearest Open Connect CDN edge node → Geographic proximity-based routing</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 3: Edge Cache Lookup</strong>
+            <p>Open Connect appliance checks local cache → 80%+ hit rate at edge → Content served directly</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 4: API Gateway (Zuul) Processing</strong>
+            <p>Request routed through Zuul → Authentication, rate limiting, request routing, and load balancing</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 5: Service Discovery & Routing</strong>
+            <p>Eureka service discovery locates microservices → Request forwarded to appropriate service</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 6: Microservice Processing</strong>
+            <p>Catalog service for metadata → Recommendations service for personalized content → Playback service for streaming</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 7: Database Queries</strong>
+            <p>Cassandra queries for user profile and watch history → Redis for session data → EVCache for hot content</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 8: Content Assembly & Encoding</strong>
+            <p>Metadata, recommendations, and playback URLs assembled → Video encoded for device compatibility</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 9: Response Delivery</strong>
+            <p>Response sent back through CDN → Progressive download and adaptive streaming</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 10: User Experience</strong>
+            <p>Content starts playing → <100ms startup latency → Smooth streaming experience</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Uber Flow -->
+      <div style="background: #f8f9fa; padding: 30px; border-radius: 12px; margin-bottom: 30px;">
+        <h3 style="color: #667eea; margin-bottom: 20px;">🚗 Uber Architecture Flow (10 Steps)</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 1: Ride Request Initiation</strong>
+            <p>User requests ride → App sends pickup/dropoff locations, time, and ride type to Uber servers</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 2: Location Geocoding</strong>
+            <p>Addresses converted to coordinates → Google Maps API provides precise GPS coordinates</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 3: S2 Cell Indexing</strong>
+            <p>Google S2 library converts coordinates to S2 cells → Efficient spatial indexing for nearby drivers</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 4: Driver Discovery via RingPop</strong>
+            <p>RingPop finds available drivers in S2 cells → Consistent hashing for service discovery and load balancing</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 5: Real-time Matching Algorithm</strong>
+            <p>Matching algorithm considers ETA, price, driver rating, user preferences → <50ms matching time</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 6: Dynamic Pricing Calculation</strong>
+            <p>ML-based surge pricing calculates fare based on real-time demand/supply ratio</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 7: Driver Notification</strong>
+            <p>Selected driver receives ride request → Push notification sent via Firebase Cloud Messaging</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 8: Ride Execution Tracking</strong>
+            <p>Real-time GPS tracking → Route optimization → ETA updates to user</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 9: Event Streaming via Kafka</strong>
+            <p>Kafka streams ride events → Real-time analytics, monitoring, and business intelligence</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 10: Payment & Rating</strong>
+            <p>Payment processed via Stripe/Braintree → Both user and driver rate each other</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Twitter Flow -->
+      <div style="background: #f8f9fa; padding: 30px; border-radius: 12px;">
+        <h3 style="color: #667eea; margin-bottom: 20px;">🐦 Twitter Architecture Flow (10 Steps)</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 1: User Timeline Request</strong>
+            <p>User opens Twitter app → Request for home timeline with authentication token</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 2: Timeline Cache Lookup</strong>
+            <p>Redis cluster checks for cached timeline → 98%+ cache hit rate → Timeline served immediately</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 3: Fan-out Service Trigger</strong>
+            <p>If cache miss, fan-out service retrieves tweets from users the current user follows</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 4: Tweet Retrieval from Manhattan</strong>
+            <p>Tweets retrieved from Manhattan (Twitter's distributed database) → Sharded by tweet ID</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 5: Timeline Assembly</strong>
+            <p>Tweets sorted by timestamp → Timeline assembled from cached tweets → <200ms generation time</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 6: Media Content Loading</strong>
+            <p>Images and videos loaded from CDN → Lazy loading for better performance</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 7: User Interaction Events</strong>
+            <p>Like, retweet, comment events sent to event bus → Processed asynchronously</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 8: Fan-out on Write</strong>
+            <p>New tweets pushed to follower timelines via fan-out on write → Pre-computed for better read performance</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 9: Real-time Updates via WebSocket</strong>
+            <p>WebSocket connections push new tweets to online users → Real-time timeline updates</p>
+          </div>
+          <div style="padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+            <strong>Step 10: Search & Analytics</strong>
+            <p>Elasticsearch indexes tweets for search → Real-time analytics and trending topics</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Companies Implementing Similar Designs -->
+    <div class="section">
+      <h2>🏢 Companies Implementing These System Designs</h2>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        <div style="padding: 25px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px;">
+          <h3 style="margin-bottom: 15px;">📺 Netflix-Style Streaming</h3>
+          <ul style="line-height: 1.8;">
+            <li><strong>Amazon Prime Video</strong> - AWS-based CDN, microservices</li>
+            <li><strong>Disney+</strong> - Similar edge computing architecture</li>
+            <li><strong>Hulu</strong> - Multi-CDN strategy</li>
+            <li><strong>HBO Max</strong> - WarnerMedia streaming platform</li>
+            <li><strong>YouTube</strong> - Google's video streaming infrastructure</li>
+          </ul>
+        </div>
+
+        <div style="padding: 25px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px;">
+          <h3 style="margin-bottom: 15px;">🚗 Uber-Style Ride-Sharing</h3>
+          <ul style="line-height: 1.8;">
+            <li><strong>Lyft</strong> - Similar geospatial indexing and matching</li>
+            <li><strong>Grab</strong> - Southeast Asia ride-sharing platform</li>
+            <li><strong>Didi Chuxing</strong> - Chinese ride-sharing giant</li>
+            <li><strong>Ola</strong> - Indian ride-sharing service</li>
+            <li><strong>Bolt</strong> - European ride-sharing platform</li>
+          </ul>
+        </div>
+
+        <div style="padding: 25px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px;">
+          <h3 style="margin-bottom: 15px;">🐦 Twitter-Style Social Media</h3>
+          <ul style="line-height: 1.8;">
+            <li><strong>Instagram</strong> - Facebook's photo sharing platform</li>
+            <li><strong>TikTok</strong> - ByteDance's video sharing app</li>
+            <li><strong>Reddit</strong> - Social news aggregation</li>
+            <li><strong>LinkedIn</strong> - Professional networking platform</li>
+            <li><strong>Pinterest</strong> - Image discovery and sharing</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Code examples
+    const codeExamples = {
+      'cache-aside': {
+        title: 'Redis Cache-Aside Pattern',
+        code: `async function getUserData(userId) {
+  // Try cache first for performance
+  let data = await redis.get(\`user:\${userId}\`);
+  if (data) {
+    console.log('Cache HIT for user:', userId);
+    return JSON.parse(data);
+  }
+  
+  // Cache miss - fetch from database
+  console.log('Cache MISS for user:', userId);
+  data = await db.users.findById(userId);
+  
+  // Store in cache for next request (1 hour TTL)
+  await redis.setex(\`user:\${userId}\`, 3600, JSON.stringify(data));
+  
+  return data;
+}
+
+// Usage example
+const user = await getUserData(12345);
+console.log('User data:', user);`
+      },
+      'load-balancer': {
+        title: 'Round Robin Load Balancer',
+        code: `class LoadBalancer {
+  constructor(servers) {
+    this.servers = servers;
+    this.currentIndex = 0;
+  }
+  
+  getNextServer() {
+    const server = this.servers[this.currentIndex];
+    this.currentIndex = (this.currentIndex + 1) % this.servers.length;
+    return server;
+  }
+  
+  async handleRequest(request) {
+    const server = this.getNextServer();
+    try {
+      const response = await fetch(server.url, request);
+      return response;
+    } catch (error) {
+      console.log('Server failed, trying next...');
+      return this.handleRequest(request);
+    }
+  }
+}
+
+// Usage
+const lb = new LoadBalancer([
+  { url: 'http://server1:3000' },
+  { url: 'http://server2:3000' },
+  { url: 'http://server3:3000' }
+]);`
+      },
+      'message-queue': {
+        title: 'Message Queue Producer/Consumer',
+        code: `// Producer
+class MessageProducer {
+  constructor(queue) {
+    this.queue = queue;
+  }
+  
+  async publish(message) {
+    await this.queue.enqueue({
+      id: generateId(),
+      payload: message,
+      timestamp: Date.now(),
+      retries: 0
+    });
+    console.log('Message published:', message);
+  }
+}
+
+// Consumer
+class MessageConsumer {
+  constructor(queue) {
+    this.queue = queue;
+  }
+  
+  async start() {
+    while (true) {
+      try {
+        const message = await this.queue.dequeue();
+        await this.processMessage(message);
+      } catch (error) {
+        console.error('Processing failed:', error);
+      }
+    }
+  }
+  
+  async processMessage(message) {
+    console.log('Processing message:', message.payload);
+    // Business logic here
+  }
+}`
+      },
+      'rate-limiter': {
+        title: 'Token Bucket Rate Limiter',
+        code: `class RateLimiter {
+  constructor(capacity, refillRate) {
+    this.capacity = capacity;
+    this.tokens = capacity;
+    this.refillRate = refillRate;
+    this.lastRefill = Date.now();
+  }
+  
+  allowRequest() {
+    this.refillTokens();
+    
+    if (this.tokens >= 1) {
+      this.tokens -= 1;
+      return true;
+    }
+    
+    return false;
+  }
+  
+  refillTokens() {
+    const now = Date.now();
+    const timePassed = (now - this.lastRefill) / 1000;
+    const tokensToAdd = Math.floor(timePassed * this.refillRate);
+    
+    if (tokensToAdd > 0) {
+      this.tokens = Math.min(this.capacity, this.tokens + tokensToAdd);
+      this.lastRefill = now;
+    }
+  }
+}
+
+// Usage: 100 requests per minute
+const rateLimiter = new RateLimiter(100, 100/60);`
+      }
+    };
+
+    // Quiz questions
+    const quizQuestions = [
+      {
+        question: "🤔 Which caching strategy is best for read-heavy workloads with infrequent updates?",
+        options: ["Write-Through Cache", "Cache-Aside Pattern", "Write-Behind Cache", "Refresh-Ahead Cache"],
+        correct: 1
+      },
+      {
+        question: "⚖️ What does the CAP theorem state about distributed systems?",
+        options: ["You can have all three: Consistency, Availability, Partition tolerance", "You must choose between Consistency and Availability during network partitions", "Partition tolerance is optional in modern systems", "Availability is more important than consistency"],
+        correct: 1
+      },
+      {
+        question: "🔄 Which database consistency model is best for financial transactions?",
+        options: ["Eventual Consistency", "Strong Consistency", "No Consistency", "Weak Consistency"],
+        correct: 1
+      },
+      {
+        question: "📊 What is the primary benefit of using a message queue?",
+        options: ["Faster response times", "Decoupling and resilience", "Reduced database load", "Better security"],
+        correct: 1
+      },
+      {
+        question: "🌐 Which load balancing algorithm provides the most even distribution?",
+        options: ["Round Robin", "Least Connections", "IP Hash", "Random"],
+        correct: 0
+      }
+    ];
+
+    let currentQuestionIndex = 0;
+    let quizScore = 0;
+
+    // Code playground functions
+    function loadCodeExample(example) {
+      const codeData = codeExamples[example];
+      if (codeData) {
+        document.getElementById('codeTitle').textContent = codeData.title;
+        document.getElementById('codeContent').textContent = codeData.code;
+        
+        document.querySelectorAll('.code-example-btn').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+      }
+    }
+
+    function runCode() {
+      const codeContent = document.getElementById('codeContent');
+      const outputDiv = document.getElementById('codeOutput');
+      
+      outputDiv.style.display = 'block';
+      outputDiv.textContent = '🚀 Running code...';
+      
+      setTimeout(() => {
+        const outputs = [
+          'Cache HIT for user: 12345\nUser data: {id: 12345, name: "John", email: "john@example.com"}',
+          'Next server: http://server2:3000\nRequest handled successfully',
+          'Message published: {type: "order", data: {...}}\nProcessing message: order data',
+          'Request allowed: true\nTokens remaining: 99'
+        ];
+        
+        const randomOutput = outputs[Math.floor(Math.random() * outputs.length)];
+        outputDiv.textContent = '✅ ' + randomOutput;
+        
+        codeContent.style.background = '#2d5a2d';
+        setTimeout(() => {
+          codeContent.style.background = '#1e1e1e';
+        }, 1000);
+      }, 1500);
+    }
+
+    function resetCode() {
+      document.getElementById('codeOutput').style.display = 'none';
+    }
+
+    // Quiz functions
+    function loadQuestion() {
+      const question = quizQuestions[currentQuestionIndex];
+      document.getElementById('quizQuestion').textContent = question.question;
+      
+      const optionsContainer = document.getElementById('quizOptions');
+      optionsContainer.innerHTML = '';
+      
+      question.options.forEach((option, index) => {
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'quiz-option';
+        optionDiv.textContent = option;
+        optionDiv.onclick = () => checkQuizAnswer(optionDiv, index === question.correct);
+        optionsContainer.appendChild(optionDiv);
+      });
+      
+      document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+      
+      const dots = document.querySelectorAll('.progress-dot');
+      dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index <= currentQuestionIndex);
+      });
+      
+      document.getElementById('prevBtn').style.visibility = currentQuestionIndex === 0 ? 'hidden' : 'visible';
+      document.getElementById('nextBtn').textContent = 
+        currentQuestionIndex === quizQuestions.length - 1 ? 'Finish Quiz' : 'Next →';
+    }
+
+    function checkQuizAnswer(element, isCorrect) {
+      const options = document.querySelectorAll('.quiz-option');
+      options.forEach(option => {
+        option.style.pointerEvents = 'none';
+      });
+
+      if (isCorrect) {
+        element.classList.add('correct');
+        quizScore++;
+      } else {
+        element.classList.add('incorrect');
+      }
+    }
+
+    function nextQuestion() {
+      if (currentQuestionIndex < quizQuestions.length - 1) {
+        currentQuestionIndex++;
+        loadQuestion();
+      } else {
+        showQuizResults();
+      }
+    }
+
+    function previousQuestion() {
+      if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        loadQuestion();
+      }
+    }
+
+    function showQuizResults() {
+      document.getElementById('quizContainer').style.display = 'none';
+      document.getElementById('quizResults').style.display = 'block';
+      document.getElementById('quizScore').textContent = `${quizScore}/${quizQuestions.length}`;
+    }
+
+    function restartQuiz() {
+      currentQuestionIndex = 0;
+      quizScore = 0;
+      document.getElementById('quizContainer').style.display = 'block';
+      document.getElementById('quizResults').style.display = 'none';
+      loadQuestion();
+    }
+
+    // Case study functions
+    function toggleCaseStudy(company) {
+      const details = document.getElementById(`${company}-details`);
+      const isVisible = details.style.display !== 'none';
+      
+      document.querySelectorAll('.case-details').forEach(detail => {
+        detail.style.display = 'none';
+      });
+      
+      details.style.display = isVisible ? 'none' : 'block';
+      
+      event.target.textContent = isVisible ? 'View Architecture Details →' : 'Hide Architecture Details ←';
+    }
+
+    // Initialize
+    loadQuestion();
+  </script>
+</body>
+</html>
